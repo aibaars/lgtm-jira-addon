@@ -10,7 +10,11 @@ import com.atlassian.jira.project.Project;
 import com.atlassian.jira.workflow.JiraWorkflow;
 import com.atlassian.jira.workflow.WorkflowManager;
 import com.atlassian.jira.workflow.WorkflowSchemeManager;
+import com.opensymphony.workflow.loader.ActionDescriptor;
+import com.opensymphony.workflow.loader.FunctionDescriptor;
+import com.semmle.jira.addon.workflow.LgtmDismissAlertFactory;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -18,6 +22,8 @@ import org.ofbiz.core.entity.GenericEntityException;
 import org.ofbiz.core.entity.GenericValue;
 
 public class JiraUtils {
+
+  private static final String COM_LGTM_NOTIFICATION = "com.lgtm.notification";
 
   public static void addIssueTypeToProject(Project project, IssueType newIssueType) {
     IssueTypeSchemeManager issueTypeSchemeManager = ComponentAccessor.getIssueTypeSchemeManager();
@@ -51,13 +57,50 @@ public class JiraUtils {
         workflowScheme, workflow.getName(), issueType.getId());
   }
 
+  public static void addPostFunctionsToWorkflow(JiraWorkflow workflow) {
+    FunctionDescriptor suppress = LgtmDismissAlertFactory.suppress();
+    suppress.setName(COM_LGTM_NOTIFICATION);
+    FunctionDescriptor unsuppress = LgtmDismissAlertFactory.unsuppress();
+    unsuppress.setName(COM_LGTM_NOTIFICATION);
+
+    for (ActionDescriptor transition : workflow.getAllActions()) {
+      if (Constants.WORKFLOW_USER_SUPPRESS_TRANSITION_NAME.equalsIgnoreCase(transition.getName())) {
+        addFunction(transition, suppress);
+      } else if (Constants.WORKFLOW_USER_UNSUPPRESS_TRANSITION_NAME.equalsIgnoreCase(
+              transition.getName())
+          || Constants.WORKFLOW_USER_UNSUPPRESS_TRANSITION_NAME.equalsIgnoreCase(
+              transition.getName())) {
+        addFunction(transition, unsuppress);
+      }
+    }
+  }
+
+  private static void addFunction(ActionDescriptor transition, FunctionDescriptor function) {
+    @SuppressWarnings("unchecked")
+    List<FunctionDescriptor> functions = transition.getUnconditionalResult().getPostFunctions();
+    // remove existing functions with the same name
+    String name = function.getName();
+    if (name != null) {
+      Iterator<?> iter = functions.iterator();
+      while (iter.hasNext()) {
+        Object obj = iter.next();
+        if (obj instanceof FunctionDescriptor) {
+          FunctionDescriptor fun = (FunctionDescriptor) obj;
+          if (name.equals(fun.getName())) {
+            iter.remove();
+          }
+        }
+      }
+    }
+    functions.add(function);
+  }
+
   public static IssueType getLgtmIssueType() {
     return getIssueTypeByName(Constants.ISSUE_TYPE_NAME);
   }
 
-  public static Status getLgtmWorkflowStatus(String statusName)
-      throws StatusNotFoundException, WorkflowNotFoundException {
-    JiraWorkflow workflow = getLgtmWorkflow();
+  public static Status getLgtmWorkflowStatus(JiraWorkflow workflow, String statusName)
+      throws StatusNotFoundException {
 
     List<Status> allStatuses = workflow.getLinkedStatusObjects();
     for (Status status : allStatuses) {

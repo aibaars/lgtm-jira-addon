@@ -1,18 +1,5 @@
 package com.semmle.jira.addon;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Collection;
-import java.util.stream.Collectors;
-
-import javax.inject.Inject;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.io.IOUtils;
-
 import com.atlassian.jira.bc.ServiceResult;
 import com.atlassian.jira.bc.issue.IssueService;
 import com.atlassian.jira.component.ComponentAccessor;
@@ -35,6 +22,15 @@ import com.semmle.jira.addon.util.Constants;
 import com.semmle.jira.addon.util.JiraUtils;
 import com.semmle.jira.addon.util.StatusNotFoundException;
 import com.semmle.jira.addon.util.WorkflowNotFoundException;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Collection;
+import java.util.stream.Collectors;
+import javax.inject.Inject;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.io.IOUtils;
 
 public class LgtmServlet extends HttpServlet {
   /** */
@@ -51,8 +47,7 @@ public class LgtmServlet extends HttpServlet {
   }
 
   @Override
-  protected void doPost(HttpServletRequest req, HttpServletResponse resp)
-      throws ServletException, IOException {
+  protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
     resp.setContentType("application/json");
 
     String pathInfo = req.getPathInfo();
@@ -87,7 +82,8 @@ public class LgtmServlet extends HttpServlet {
     Status falsePositiveStatus = null;
     try {
       falsePositiveStatus =
-          JiraUtils.getLgtmWorkflowStatus(Constants.WORKFLOW_FALSE_POSITIVE_STATUS_NAME);
+          JiraUtils.getLgtmWorkflowStatus(
+              JiraUtils.getLgtmWorkflow(), Constants.WORKFLOW_FALSE_POSITIVE_STATUS_NAME);
     } catch (StatusNotFoundException | WorkflowNotFoundException e) {
       sendError(
           resp,

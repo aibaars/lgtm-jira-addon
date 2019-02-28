@@ -32,6 +32,7 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class LgtmDismissAlert extends AbstractJiraFunctionProvider {
   public static final String FIELD_TRANSITION = "transitionField";
+  static final String FULL_MODULE_KEY = "com.semmle.lgtm-jira-addonlgtm-dismiss-alert";
 
   @ComponentImport private final PluginSettingsFactory pluginSettingsFactory;
   @ComponentImport private final TransactionTemplate transactionTemplate;

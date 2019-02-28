@@ -1,12 +1,14 @@
 package com.semmle.jira.addon.workflow;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import com.atlassian.jira.plugin.workflow.AbstractWorkflowPluginFactory;
 import com.atlassian.jira.plugin.workflow.WorkflowPluginFunctionFactory;
 import com.opensymphony.workflow.loader.AbstractDescriptor;
+import com.opensymphony.workflow.loader.DescriptorFactory;
 import com.opensymphony.workflow.loader.FunctionDescriptor;
 import com.semmle.jira.addon.Request.Transition;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * This is the factory class responsible for dealing with the UI for the post-function. This is
@@ -53,5 +55,24 @@ public class LgtmDismissAlertFactory extends AbstractWorkflowPluginFactory
     params.put(LgtmDismissAlert.FIELD_TRANSITION, transition);
 
     return params;
+  }
+
+  private static FunctionDescriptor forTransition(Transition transition) {
+    FunctionDescriptor result = DescriptorFactory.getFactory().createFunctionDescriptor();
+    result.setType("class");
+    @SuppressWarnings("unchecked")
+    Map<String, String> args = result.getArgs();
+    args.put("full.module.key", LgtmDismissAlert.FULL_MODULE_KEY);
+    args.put("class.name", LgtmDismissAlert.class.getName());
+    args.put(LgtmDismissAlert.FIELD_TRANSITION, transition.value);
+    return result;
+  }
+
+  public static FunctionDescriptor suppress() {
+    return forTransition(Transition.SUPPRESS);
+  }
+
+  public static FunctionDescriptor unsuppress() {
+    return forTransition(Transition.UNSUPPRESS);
   }
 }
