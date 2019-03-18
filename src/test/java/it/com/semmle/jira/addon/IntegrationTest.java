@@ -5,11 +5,21 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
+import com.atlassian.jira.testkit.client.Backdoor;
+import com.atlassian.jira.testkit.client.restclient.Issue;
+import com.atlassian.jira.testkit.client.restclient.SearchRequest;
+import com.atlassian.jira.testkit.client.util.TestKitLocalEnvironmentData;
+import com.atlassian.jira.testkit.client.util.TimeBombLicence;
+import com.google.common.collect.Iterables;
+import com.semmle.jira.addon.Request;
+import com.semmle.jira.addon.Request.Transition;
+import com.semmle.jira.addon.Response;
+import com.semmle.jira.addon.Util;
+import com.semmle.jira.addon.config.Config;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Base64;
-
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
@@ -23,40 +33,27 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.atlassian.jira.testkit.client.Backdoor;
-import com.atlassian.jira.testkit.client.restclient.Issue;
-import com.atlassian.jira.testkit.client.restclient.SearchRequest;
-import com.atlassian.jira.testkit.client.util.TestKitLocalEnvironmentData;
-import com.atlassian.jira.testkit.client.util.TimeBombLicence;
-import com.google.common.collect.Iterables;
-import com.semmle.jira.addon.Request;
-import com.semmle.jira.addon.Request.Transition;
-import com.semmle.jira.addon.Response;
-import com.semmle.jira.addon.Util;
-import com.semmle.jira.addon.config.Config;
-
 public class IntegrationTest {
-
-  final String CREATE_STRING =
+  private static final String CREATE_STRING =
       "{\n"
-          + "    \"transition\": \"create\",\n"
-          + "    \"project\": {\n"
-          + "        \"id\": 1000001,\n"
-          + "        \"url-identifier\": \"Git/example_user/example_repo\",\n"
-          + "        \"name\": \"example_user/example_repo\",\n"
-          + "        \"url\": \"http://lgtm.example.com/projects/Git/example_user/example_repo\"\n"
+          + "  \"transition\": \"create\",\n"
+          + "  \"project\": {\n"
+          + "    \"id\": 1000003,\n"
+          + "    \"url-identifier\": \"px/project-x/project-x.js\",\n"
+          + "    \"name\": \"project-x/project-x.js\",\n"
+          + "    \"url\": \"https://lgtm.example.com/projects/px/project-x/project-x.js\"\n"
+          + "  },\n"
+          + "  \"alert\": {\n"
+          + "    \"file\": \"/src/ng/compile.js\",\n"
+          + "    \"message\": \"@param tag refers to non-existent parameter enabled.\\n\",\n"
+          + "    \"url\": \"https://lgtm.example.com/issues/1000003/javascript/+ja0cf6+84AGgat15W1jooeMfUY=\",\n"
+          + "    \"query\": {\n"
+          + "      \"name\": \"JSDoc tag for non-existent parameter\",\n"
+          + "      \"url\": \"https://lgtm.example.com/rules/1000507\"\n"
           + "    },\n"
-          + "    \"alert\": {\n"
-          + "        \"file\": \"/example.py\",\n"
-          + "        \"message\": \"Description of one issue.\\nDescription of another issue.\\n\",\n"
-          + "        \"url\": \"http://lgtm.example.com/issues/10000/language/8cdXzW+PyA3qiHBbWFomoMGtiIE=\",\n"
-          + "        \"query\": {\n"
-          + "            \"name\": \"Example rule\",\n"
-          + "            \"url\": \"http://lgtm.example.com/rules/10000\"\n"
-          + "        }\n"
-          + "    }\n"
+          + "    \"suppressed\": false\n"
+          + "  }\n"
           + "}";
-  final String CREATE_SIGNATURE = "a520128c3068f74c6d0f54d266dd0b2fe6634c33";
 
   Backdoor testKit;
   String baseUrl;
@@ -101,14 +98,14 @@ public class IntegrationTest {
   public void testCreationAndTransitionOfIssues() throws IOException {
 
     // Check correct handling of text fields into issue
-    assertEquals("Example rule (example_user/example_repo)", issueA.fields.summary);
+    assertEquals(
+        "JSDoc tag for non-existent parameter (project-x/project-x.js)", issueA.fields.summary);
     String description =
-        "*[Example rule|http://lgtm.example.com/rules/10000]*\n"
+        "*[JSDoc tag for non\\-existent parameter|https://lgtm.example.com/rules/1000507]*\n"
             + "\n"
-            + "In {{/example.py}}:\n"
-            + "{quote}Description of one issue.\n"
-            + "Description of another issue.{quote}\n"
-            + "[View alert on LGTM|http://lgtm.example.com/issues/10000/language/8cdXzW\\+PyA3qiHBbWFomoMGtiIE=]";
+            + "In {{/src/ng/compile.js}}:\n"
+            + "{quote}@param tag refers to non\\-existent parameter enabled.{quote}\n"
+            + "[View alert on LGTM|https://lgtm.example.com/issues/1000003/javascript/\\+ja0cf6\\+84AGgat15W1jooeMfUY=]";
 
     assertEquals(description, issueA.fields.description);
 
