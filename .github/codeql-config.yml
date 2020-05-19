@@ -1,0 +1,6 @@
+name: "Inrepo queries config"
+
+queries: 
+  - name: Java queries 
+    uses: ./lgtm/java-queries
+
