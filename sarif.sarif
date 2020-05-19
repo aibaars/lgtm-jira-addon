@@ -1,0 +1,34 @@
+{
+    "$schema" : "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+    "version" : "2.1.0",
+    "runs" :
+    [
+  	{
+	    "tool" : {
+		"driver" : {
+		    "name" : "CodeQL command-line toolchain"
+		}
+	    },
+	    "results" : [ {
+		"message" : {
+		    "text" : "Upload: _TIME_."
+		},
+		"locations" : [ {
+		    "physicalLocation" : {
+			"artifactLocation" : {
+			    "uri" : "sarif.sarif"
+			},
+			"region" : {
+			    "startLine" : 2,
+			    "startColumn" : 7,
+			    "endColumn" : 10
+			}
+		    }
+		} ],
+		"partialFingerprints" : {
+		    "primaryLocationLineHash" : "_TIME_:1"
+		}
+	    }]
+	}		
+    ]
+}
